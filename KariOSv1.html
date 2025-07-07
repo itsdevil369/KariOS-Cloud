@@ -1,0 +1,175 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KariOS Cloud v1 Stable</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0; padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #01010a, #050522);
+      color: #00f7ff;
+      overflow-x: hidden;
+      animation: backgroundShift 20s infinite alternate;
+    }
+    @keyframes backgroundShift {
+      0% { background-position: left top; }
+      100% { background-position: right bottom; }
+    }
+    h1 {
+      text-align: center; font-size: 2.5em;
+      color: #00ffff; text-shadow: 0 0 12px #0ff;
+      animation: pulse 4s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    .container {
+      max-width: 700px; margin: auto;
+      padding: 25px;
+      backdrop-filter: blur(12px);
+      background: rgba(0,0,20,0.25);
+      border-radius: 14px;
+      box-shadow: 0 0 20px rgba(0,255,255,0.15);
+      animation: fadeIn 1.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    textarea, input, button {
+      width: 100%; margin: 10px 0;
+      padding: 12px;
+      background: rgba(0,255,255,0.07);
+      border: 1px solid #00f7ff;
+      color: #00f7ff;
+      border-radius: 10px;
+      font-size: 1em;
+      transition: all 0.2s ease;
+    }
+    button {
+      cursor: pointer;
+      background: #00f7ff;
+      color: #000;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #00c2c2;
+      transform: scale(1.02);
+    }
+    #memoryBox {
+      height: 250px; overflow-y: auto;
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: monospace;
+      line-height: 1.4;
+      box-shadow: inset 0 0 12px #00f7ff;
+    }
+    .footer {
+      text-align:center;
+      font-size:13px;
+      margin-top:20px;
+      color:#888;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧠 KariOS Cloud v1 Stable</h1>
+  <div class="container">
+    <textarea id="userInput" placeholder="🔮 Enter your thought, idea, or discovery..."></textarea>
+    <input id="topicInput" placeholder="🏷️ Topic (optional)" />
+    <button onclick="saveMemory()">💾 Save Memory</button>
+    <input id="searchInput" placeholder="🔍 Search Memory..." oninput="searchMemory()" />
+    <button onclick="exportMemory()">📤 Export Memory</button>
+    <button onclick="importMemory()">📥 Import Memory</button>
+    <button onclick="clearMemory()">🗑️ Clear All Memory</button><div id="memoryBox">🌠 Memories will appear here...</div>
+
+  </div>
+  <div class="footer">
+    Created by Paritosh Salunke • KariX ∞ Cloud • Voice+Memory+AutoLearning AI Ready
+  </div>  <script>
+    const storeKey = "kariOSCloud_v1";
+
+    function getCloud() {
+      return JSON.parse(localStorage.getItem(storeKey) || "[]");
+    }
+
+    function setCloud(data) {
+      localStorage.setItem(storeKey, JSON.stringify(data));
+      displayMemory(data);
+    }
+
+    function saveMemory() {
+      const input = document.getElementById("userInput").value.trim();
+      const topic = document.getElementById("topicInput").value.trim() || "general";
+      if (!input) return;
+
+      let cloud = getCloud();
+      cloud.push({
+        time: new Date().toLocaleString(),
+        topic, input,
+        sig: "KX-#" + Math.floor(Math.random()*999999)
+      });
+      setCloud(cloud);
+      document.getElementById("userInput").value = "";
+      document.getElementById("topicInput").value = "";
+    }
+
+    function displayMemory(cloud) {
+      const html = cloud.map(e =>
+        `[${e.time}] (${e.topic})\n🧬 ${e.input}\n🔖 ${e.sig}`
+      ).join("\n\n");
+      document.getElementById("memoryBox").innerText = html || "🌠 No saved memory.";
+    }
+
+    function searchMemory() {
+      const term = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = getCloud().filter(e =>
+        e.input.toLowerCase().includes(term) ||
+        e.topic.toLowerCase().includes(term)
+      );
+      displayMemory(filtered);
+    }
+
+    function exportMemory() {
+      const blob = new Blob([localStorage.getItem(storeKey) || ""], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "karios_memory.json"; a.click();
+    }
+
+    function importMemory() {
+      const input = document.createElement("input");
+      input.type = "file"; input.accept = ".json";
+      input.onchange = () => {
+        const file = input.files[0];
+        const fr = new FileReader();
+        fr.onload = () => {
+          try {
+            const imported = JSON.parse(fr.result);
+            setCloud([...getCloud(), ...imported]);
+            alert("✅ Memory imported.");
+          } catch {
+            alert("❌ Invalid file.");
+          }
+        };
+        fr.readAsText(file);
+      };
+      input.click();
+    }
+
+    function clearMemory() {
+      if (confirm("Delete all memory?")) {
+        localStorage.removeItem(storeKey);
+        displayMemory([]);
+      }
+    }
+
+    window.onload = () => displayMemory(getCloud());
+  </script></body>
+</html>
